@@ -1,0 +1,61 @@
+# This workflow will do a clean installation of node dependencies and run tests across different versions of node
+
+name: Test App Vite CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: TEST
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Test project
+        run: npm run ghworkflowtest
+        env:
+          # Cloudinary environment variables:
+          VITE_CLOUDINARYUPLOADURL: ${{ secrets.VITE_CLOUDINARYUPLOADURL }}
+          VITE_CLOUDNAME: ${{ secrets.VITE_CLOUDNAME }}
+          VITE_CLOUDINARY_APIKEY: ${{ secrets.VITE_CLOUDINARY_APIKEY }}
+          VITE_APISECRET: ${{ secrets.VITE_APISECRET }}
+          # Firebase environment variables
+          VITE_APIKEY: ${{ secrets.VITE_APIKEY }}
+          VITE_AUTHDOMAIN: ${{ secrets.VITE_AUTHDOMAIN }}
+          VITE_PROJECTID: ${{ secrets.VITE_PROJECTID }}
+          VITE_STORAGEBUCKET: ${{ secrets.VITE_STORAGEBUCKET }}
+          VITE_MESSAGINGSENDERID: ${{ secrets.VITE_MESSAGINGSENDERID }}
+          VITE_APPID: ${{ secrets.VITE_APPID }}
+
+  # Development environment
+  development:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: [test]
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
